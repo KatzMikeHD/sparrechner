@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sparrechner – ETF, Aktie & Altersvorsorgedepot</title>
+<style>
+:root{--bg:#fafaf8;--card:#fff;--text:#1a1a18;--muted:#6b6a65;--line:#e6e5df;--blue:#2a78d6;--orange:#eb6834;--green:#1baf7a;--gray:#888780;--red:#d03b3b}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--text:#f0efec;--muted:#a3a29b;--line:#2f2f2c}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+main{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;font-weight:600;margin:0 0 4px}
+h2{font-size:18px;font-weight:600;margin:32px 0 12px}
+.sub{color:var(--muted);margin:0 0 24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+input[type=number]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font-size:16px}
+.row{display:flex;align-items:center;gap:12px}
+.row input[type=range]{flex:1;accent-color:var(--blue)}
+.val{min-width:72px;text-align:right;font-weight:600}
+.k{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.k .l{font-size:13px;color:var(--muted)}
+.k .v{font-size:24px;font-weight:600;margin-top:2px}
+.k .h{font-size:12px;color:var(--muted);margin-top:4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.two .k,.two .grp{min-width:0}
+.grp{border:2px solid var(--line);border-radius:16px;padding:12px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px}
+.two .grp{margin-bottom:0}
+.grp .two{margin-bottom:0}
+.grp .k{border:none;background:var(--bg)}
+.gt{font-size:13px;font-weight:600;text-transform:none;letter-spacing:.2px}
+.g-in{border-color:var(--gray)} .g-in .gt{color:var(--muted)}
+.g-nom{border-color:var(--blue)} .g-nom .gt{color:var(--blue)}
+.g-real{border-color:var(--orange)} .g-real .gt{color:var(--orange)}
+.k .x{font-size:14px;font-weight:600;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+@media (max-width:420px){.k .v{font-size:19px}.two{gap:10px}}
+.k.main{border:2px solid var(--blue)}
+.k.real{border:2px solid var(--orange)}
+.k.loss .v{color:var(--red)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin-bottom:8px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.chart{position:relative;height:340px}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin-top:8px}
+p{margin:0 0 12px}
+.note{font-size:13px;color:var(--muted);margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+<h1>Sparrechner</h1>
+<p class="sub">ETF, Einzelaktie und Altersvorsorgedepot – Monat für Monat gerechnet.</p>
+
+<div class="card">
+  <div class="grid">
+    <div><label for="etf">ETF pro Monat (€)</label><input type="number" id="etf" value="90" min="0" step="5"></div>
+    <div><label for="akt">Aktie pro Monat (€)</label><input type="number" id="akt" value="10" min="0" step="5"></div>
+    <div><label for="avd">Altersvorsorgedepot pro Monat (€)</label><input type="number" id="avd" value="30" min="0" step="5"></div>
+    <div><label for="sa">Startalter</label><input type="number" id="sa" value="19" min="0" max="80"></div>
+    <div><label for="ea">Endalter</label><input type="number" id="ea" value="67" min="1" max="100"></div>
+  </div>
+  <div style="margin-top:18px">
+    <label for="ren">Rendite pro Jahr</label>
+    <div class="row"><input type="range" id="ren" min="0" max="12" step="0.5" value="7"><span class="val" id="renv"></span></div>
+  </div>
+  <div style="margin-top:10px">
+    <label for="inf">Inflation pro Jahr</label>
+    <div class="row"><input type="range" id="inf" min="0" max="6" step="0.5" value="2"><span class="val" id="infv"></span></div>
+  </div>
+  <div style="margin-top:10px">
+    <label for="inc">Sparrate jedes Jahr erhöhen um</label>
+    <div class="row"><input type="range" id="inc" min="0" max="50" step="1" value="0"><span class="val" id="incv"></span></div>
+  </div>
+  <label class="chk"><input type="checkbox" id="bon" checked> Berufseinsteigerbonus (einmalig 200 € ins Altersvorsorgedepot)</label>
+</div>
+
+<h2>Ergebnis</h2>
+<div class="grp g-in">
+  <div class="gt">Einzahlungen</div>
+  <div class="two">
+    <div class="k"><div class="l">Selbst eingezahlt</div><div class="v" id="o1"></div></div>
+    <div class="k"><div class="l">Vom Staat bekommen</div><div class="v" id="o2"></div><div class="h">Zulagen im Altersvorsorgedepot</div></div>
+  </div>
+</div>
+<div class="two">
+  <div class="grp g-nom">
+    <div class="gt">Nominal</div>
+    <div class="k"><div class="l">Zinsgewinn nominal</div><div class="v" id="o3"></div></div>
+    <div class="k"><div class="l">Depotwert nominal</div><div class="v" id="o4"></div><div class="h">Das wird dein Kontostand sein.</div><div class="x" id="x1"></div></div>
+  </div>
+  <div class="grp g-real">
+    <div class="gt">Real</div>
+    <div class="k"><div class="l">Zinsgewinn real</div><div class="v" id="o5"></div><div class="h">Gewinn in heutiger Kaufkraft</div></div>
+    <div class="k"><div class="l">Depotwert real</div><div class="v" id="o6"></div><div class="h">So viel ist es heute wert.</div><div class="x" id="x2"></div></div>
+  </div>
+</div>
+<div class="k loss" style="margin-top:14px"><div class="l">Verlust durch Inflation</div><div class="v" id="o7"></div><div class="h">Nominal minus real</div></div>
+
+<h2>Verlauf</h2>
+<div class="card">
+  <div class="legend">
+    <span><i style="background:var(--gray)"></i>Eingezahlt</span>
+    <span><i style="background:var(--green)"></i>Vom Staat</span>
+    <span><i style="background:var(--blue)"></i>Depotwert nominal</span>
+    <span><i style="background:var(--orange)"></i>Depotwert real</span>
+  </div>
+  <div class="chart"><canvas id="ch" role="img" aria-label="Verlauf von Einzahlungen, Zulagen und Depotwert über die Jahre"></canvas></div>
+</div>
+
+<h2>So funktioniert die Rechnung</h2>
+<p><b>Monatlich gerechnet:</b> Jeden Monat werden deine Raten eingezahlt und das ganze Depot wächst mit der eingestellten Rendite. Erträge bleiben im Depot (thesaurierend) – so entsteht der Zinseszins.</p>
+<p><b>Altersvorsorgedepot:</b> Angenommen ist eine staatliche Zulage von 50 % auf die ersten 360 € pro Jahr und 25 % auf weitere Einzahlungen bis 1.800 € pro Jahr (max. 540 € im Jahr). Optional kommt einmalig der Berufseinsteigerbonus von 200 € dazu. Das Geld ist bis zur Rente gebunden.</p>
+<p><b>Nominal vs. real:</b> Der nominale Wert ist die Zahl auf deinem Konto. Der reale Wert zeigt, was du dir dafür in heutigen Preisen kaufen könntest – Inflation macht Geld mit der Zeit weniger wert.</p>
+<p><b>Jährliche Erhöhung:</b> Der Betrag wird jedes Jahr zur gesamten Monatsrate dazugerechnet und im gleichen Verhältnis auf ETF, Aktie und Altersvorsorge verteilt.</p>
+<p class="note">Beispielrechnung, keine Anlageberatung. Renditen schwanken und sind nicht garantiert; Steuern, Gebühren und Fondskosten sind nicht berücksichtigt. Einzelaktien können deutlich besser oder schlechter laufen als der Durchschnitt. Zulage-Regeln können sich ändern.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const eur=v=>Math.round(v).toLocaleString('de-DE')+' €';
+const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+const tick=dark?'#a3a29b':'#6b6a65', grid=dark?'#2f2f2c':'#ecebe5';
+let chart;
+
+function zulage(jahr){
+  const a=Math.min(jahr,360), b=Math.max(0,Math.min(jahr,1800)-360);
+  return a*0.5+b*0.25;
+}
+
+function calc(){
+  const etf=Math.max(0,+$('etf').value||0), akt=Math.max(0,+$('akt').value||0), avd=Math.max(0,+$('avd').value||0);
+  let sa=+$('sa').value||0, ea=+$('ea').value||0; if(ea<=sa) ea=sa+1;
+  const ren=+$('ren').value/100, inf=+$('inf').value/100, inc=+$('inc').value;
+  $('renv').textContent=$('ren').value.replace('.',',')+' %';
+  $('infv').textContent=$('inf').value.replace('.',',')+' %';
+  $('incv').textContent=inc+' €';
+  const rm=Math.pow(1+ren,1/12)-1, im=Math.pow(1+inf,1/12);
+  const sum=etf+akt+avd, wE=sum?etf/sum:1/3, wA=sum?akt/sum:1/3, wV=sum?avd/sum:1/3;
+  let dep=0, ein=0, staat=0, months=(ea-sa)*12;
+  const L=[sa],E=[0],S=[0],N=[0],R=[0];
+  if($('bon').checked && avd>0){dep+=200; staat+=200;}
+  for(let m=1;m<=months;m++){
+    const y=Math.floor((m-1)/12), add=inc*y;
+    const pE=etf+add*wE, pA=akt+add*wA, pV=avd+add*wV;
+    const z=zulage(pV*12)/12;
+    dep=dep*(1+rm)+pE+pA+pV+z;
+    ein+=pE+pA+pV; staat+=z;
+    if(m%12===0){L.push(sa+m/12);E.push(ein);S.push(staat);N.push(dep);R.push(dep/Math.pow(im,m));}
+  }
+  const real=dep/Math.pow(im,months);
+  $('o1').textContent=eur(ein); $('o2').textContent=eur(staat);
+  $('o3').textContent=eur(dep-ein-staat); $('o4').textContent=eur(dep);
+  $('o5').textContent=eur(real-ein-staat); $('o6').textContent=eur(real);
+  $('o7').textContent=eur(dep-real);
+  const fx=v=>ein>0?(v/ein).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+'-fache deiner Einzahlung':'–';
+  $('x1').textContent=fx(dep); $('x2').textContent=fx(real);
+  const ds=[
+    {label:'Eingezahlt',data:E,borderColor:'#888780',borderDash:[6,4]},
+    {label:'Vom Staat',data:S,borderColor:'#1baf7a'},
+    {label:'Depotwert nominal',data:N,borderColor:'#2a78d6',backgroundColor:'rgba(42,120,214,0.08)',fill:true},
+    {label:'Depotwert real',data:R,borderColor:'#eb6834',borderDash:[2,3]}
+  ].map(d=>Object.assign({borderWidth:2.5,pointRadius:0,tension:0.25},d));
+  if(chart){chart.data.labels=L;chart.data.datasets=ds;chart.update('none');return;}
+  chart=new Chart($('ch'),{type:'line',data:{labels:L,datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,animation:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{callbacks:{title:t=>'Alter '+t[0].label,label:t=>t.dataset.label+': '+eur(t.raw)}}},
+    scales:{x:{title:{display:true,text:'Alter',color:tick},ticks:{color:tick,maxTicksLimit:10},grid:{display:false}},
+            y:{ticks:{color:tick,callback:v=>v>=1000?Math.round(v/1000).toLocaleString('de-DE')+'k €':v+' €'},grid:{color:grid}}}}});
+}
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',calc));
+calc();
+</script>
+</body>
+</html>
